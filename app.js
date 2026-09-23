@@ -5,21 +5,15 @@
 // locking — just add meals, see the day's running total.
 // -----------------------------------------------------------------------
 
+// app.js
 let state = null;
 const root = document.getElementById("app");
 
-// Which day's "add meal" form is currently open (by date string), or
-// null if none. Transient UI state, not persisted.
 let openFormDate = null;
-
-// The open form's current field values — kept here (not just in the
-// DOM) so a meal-type selection, which triggers a re-render, doesn't
-// wipe out whatever the person already typed.
 let formState = { mealType: "Snack", customName: "", calories: "" };
 
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack", "Customize"];
 
-// ---------- Entry point ----------
 function init() {
   state = Storage.load() || { days: [] };
   Storage.findOrCreateDay(state, new Date());
@@ -39,7 +33,6 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;");
 }
 
-// ---------- Render a single day block ----------
 function renderDayBlock(day) {
   const total = Storage.getDayTotal(day);
   const formOpen = openFormDate === day.date;
@@ -76,7 +69,6 @@ function renderDayBlock(day) {
   `;
 }
 
-// ---------- Render the "add a meal" form for a given day ----------
 function renderAddForm(date) {
   const typeButtons = MEAL_TYPES.map(
     (type) => `
@@ -104,12 +96,32 @@ function renderAddForm(date) {
   `;
 }
 
-// ---------- Full render ----------
 function render() {
   const sortedDays = [...state.days].sort((a, b) => a.date.localeCompare(b.date));
   const blocks = sortedDays.map((day) => renderDayBlock(day)).join("");
 
-  root.innerHTML = `<div class="ledger">${blocks}</div>`;
+  root.innerHTML = `
+    <div class="ledger">
+      <div class="date-nav-bar">
+        <button class="nav-day-btn" data-action="add-prev-day">+ Add Previous Day</button>
+      </div>
+      
+      ${blocks}
+
+      <div class="date-nav-bar">
+        <button class="nav-day-btn" data-action="add-next-day">+ Add Next Day</button>
+      </div>
+
+      <!-- Export / Import Footer -->
+      <footer class="footer-actions">
+        <button class="link-btn" data-action="export-data">Export data</button>
+        <button class="link-btn" data-action="import-data">Import data</button>
+        <button class="link-btn danger" data-action="reset-data">Reset all data</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none;" />
+      </footer>
+    </div>
+  `;
+
   attachEvents();
 
   if (!openFormDate) {
@@ -117,7 +129,6 @@ function render() {
   }
 }
 
-// ---------- Events ----------
 function attachEvents() {
   document.querySelectorAll('[data-action="toggle-add"]').forEach((btn) => {
     btn.addEventListener("click", (e) => handleToggleAddForm(e.currentTarget.dataset.date));
@@ -142,6 +153,27 @@ function attachEvents() {
       handleDeleteMeal(e.currentTarget.dataset.date, parseInt(e.currentTarget.dataset.index, 10));
     });
   });
+
+  // أزرار إضافة الأيام
+  const prevBtn = document.querySelector('[data-action="add-prev-day"]');
+  if (prevBtn) prevBtn.addEventListener("click", () => { Storage.addPreviousDay(state); render(); });
+
+  const nextBtn = document.querySelector('[data-action="add-next-day"]');
+  if (nextBtn) nextBtn.addEventListener("click", () => { Storage.addNextDay(state); render(); });
+
+  // أزرار تصدير واستيراد البيانات
+  const exportBtn = document.querySelector('[data-action="export-data"]');
+  if (exportBtn) exportBtn.addEventListener("click", handleExport);
+
+  const importBtn = document.querySelector('[data-action="import-data"]');
+  const fileInput = document.getElementById("importFileInput");
+  if (importBtn && fileInput) {
+    importBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", handleImport);
+  }
+
+  const resetBtn = document.querySelector('[data-action="reset-data"]');
+  if (resetBtn) resetBtn.addEventListener("click", handleReset);
 }
 
 function handleToggleAddForm(date) {
@@ -155,7 +187,6 @@ function handleToggleAddForm(date) {
 }
 
 function handleSelectMealType(type) {
-  // Capture whatever's already typed before the re-render wipes the DOM.
   const calInput = document.getElementById("mealCaloriesInput");
   const nameInput = document.getElementById("mealCustomNameInput");
   if (calInput) formState.calories = calInput.value;
@@ -208,14 +239,56 @@ function handleEditMeal(date, index) {
 
 function handleDeleteMeal(date, index) {
   const day = state.days.find((d) => d.date === date);
-  const meal = day.meals[index];
 
-  const confirmed = confirm(`Delete "${meal.name}" (${fmt(meal.calories)} cal)?`);
+  const confirmed = confirm(`Delete "${day.meals[index].name}"?`);
   if (!confirmed) return;
 
   day.meals.splice(index, 1);
   Storage.save(state);
   render();
+}
+
+// تصدير البيانات (Export)
+function handleExport() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+  const dlAnchorElem = document.createElement("a");
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", `meal-ledger-backup-${new Date().toISOString().slice(0, 10)}.json`);
+  dlAnchorElem.click();
+}
+
+// استيراد البيانات (Import)
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (evt) {
+    try {
+      const imported = JSON.parse(evt.target.result);
+      if (imported && Array.isArray(imported.days)) {
+        state = imported;
+        Storage.save(state);
+        render();
+        alert("Data imported successfully!");
+      } else {
+        alert("Invalid file format.");
+      }
+    } catch (err) {
+      alert("Error reading JSON file.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+// إعادة ضبط البيانات (Reset)
+function handleReset() {
+  if (confirm("Are you sure you want to clear all data? This cannot be undone.")) {
+    state = { days: [] };
+    Storage.findOrCreateDay(state, new Date());
+    Storage.save(state);
+    render();
+  }
 }
 
 init();

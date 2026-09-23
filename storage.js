@@ -14,6 +14,7 @@
 // row and sums the calories, rather than creating a duplicate row.
 // -----------------------------------------------------------------------
 
+// storage.js
 const STORAGE_KEY = "mealLedgerState";
 
 const Storage = {
@@ -32,8 +33,6 @@ const Storage = {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   },
 
-  // Local-timezone-safe date formatting (avoids the classic bug where
-  // toISOString() shifts the date by rendering it in UTC).
   formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -45,6 +44,11 @@ const Storage = {
     return date.toLocaleDateString("en-US", { weekday: "long" });
   },
 
+  parseDateStr(dateStr) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  },
+
   createDay(date) {
     return {
       date: this.formatDate(date),
@@ -53,9 +57,6 @@ const Storage = {
     };
   },
 
-  // Finds today's (or any date's) day entry, creating it if it doesn't
-  // exist yet. Always pass a real Date object — never a re-parsed
-  // string — so the date/day-name never drift across timezones.
   findOrCreateDay(state, date) {
     const dateStr = this.formatDate(date);
     let day = state.days.find((d) => d.date === dateStr);
@@ -70,8 +71,6 @@ const Storage = {
     return day.meals.reduce((sum, m) => sum + m.calories, 0);
   },
 
-  // Adds calories to a meal, merging into an existing same-named entry
-  // for that day (case-insensitive) instead of creating a duplicate row.
   addMeal(day, name, calories) {
     const existing = day.meals.find((m) => m.name.toLowerCase() === name.toLowerCase());
     if (existing) {
@@ -80,4 +79,23 @@ const Storage = {
       day.meals.push({ name, calories });
     }
   },
+
+  // أرباب إضافة يوم سابق أو تالي
+  addPreviousDay(state) {
+    const sorted = [...state.days].sort((a, b) => a.date.localeCompare(b.date));
+    const oldestDateStr = sorted.length > 0 ? sorted[0].date : this.formatDate(new Date());
+    const oldestDate = this.parseDateStr(oldestDateStr);
+    oldestDate.setDate(oldestDate.getDate() - 1);
+    this.findOrCreateDay(state, oldestDate);
+    this.save(state);
+  },
+
+  addNextDay(state) {
+    const sorted = [...state.days].sort((a, b) => a.date.localeCompare(b.date));
+    const newestDateStr = sorted.length > 0 ? sorted[sorted.length - 1].date : this.formatDate(new Date());
+    const newestDate = this.parseDateStr(newestDateStr);
+    newestDate.setDate(newestDate.getDate() + 1);
+    this.findOrCreateDay(state, newestDate);
+    this.save(state);
+  }
 };
