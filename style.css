@@ -194,12 +194,6 @@ body {
   cursor: pointer;
 }
 
-/* ---------- Mobile ---------- */
-@media (max-width: 420px) {
-  .meal-row {
-    font-size: 0.88rem;
-  }
-}
 /* Navigation and Footer Actions */
 .date-nav-bar {
   text-align: center;
@@ -245,4 +239,11 @@ body {
 
 .link-btn.danger {
   color: var(--red);
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 420px) {
+  .meal-row {
+    font-size: 0.88rem;
+  }
 }

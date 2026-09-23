@@ -1,20 +1,4 @@
 // storage.js
-// -----------------------------------------------------------------------
-// Data model: state.days is an array of day objects, each holding a list
-// of logged meals. No budget, no target, no locking — just a running
-// log with a daily total.
-//
-//   day = {
-//     date: "2026-09-23",       // YYYY-MM-DD, in the LOCAL timezone
-//     dayName: "Wednesday",
-//     meals: [ { name: "Breakfast", calories: 450 }, ... ]
-//   }
-//
-// Logging the same meal name twice in one day merges into the existing
-// row and sums the calories, rather than creating a duplicate row.
-// -----------------------------------------------------------------------
-
-// storage.js
 const STORAGE_KEY = "mealLedgerState";
 
 const Storage = {
@@ -71,16 +55,11 @@ const Storage = {
     return day.meals.reduce((sum, m) => sum + m.calories, 0);
   },
 
+  // تم التعديل: تضاف كل وجبة أو سناك في سطر مستقل دون دمج
   addMeal(day, name, calories) {
-    const existing = day.meals.find((m) => m.name.toLowerCase() === name.toLowerCase());
-    if (existing) {
-      existing.calories += calories;
-    } else {
-      day.meals.push({ name, calories });
-    }
+    day.meals.push({ name, calories });
   },
 
-  // أرباب إضافة يوم سابق أو تالي
   addPreviousDay(state) {
     const sorted = [...state.days].sort((a, b) => a.date.localeCompare(b.date));
     const oldestDateStr = sorted.length > 0 ? sorted[0].date : this.formatDate(new Date());

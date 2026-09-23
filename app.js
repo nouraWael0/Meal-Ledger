@@ -1,11 +1,4 @@
 // app.js
-// -----------------------------------------------------------------------
-// Single continuous page: days stack from oldest (top) to newest
-// (bottom), same pattern as the Calorie Ledger project. No budget, no
-// locking — just add meals, see the day's running total.
-// -----------------------------------------------------------------------
-
-// app.js
 let state = null;
 const root = document.getElementById("app");
 
@@ -112,7 +105,6 @@ function render() {
         <button class="nav-day-btn" data-action="add-next-day">+ Add Next Day</button>
       </div>
 
-      <!-- Export / Import Footer -->
       <footer class="footer-actions">
         <button class="link-btn" data-action="export-data">Export data</button>
         <button class="link-btn" data-action="import-data">Import data</button>
@@ -154,14 +146,12 @@ function attachEvents() {
     });
   });
 
-  // أزرار إضافة الأيام
   const prevBtn = document.querySelector('[data-action="add-prev-day"]');
   if (prevBtn) prevBtn.addEventListener("click", () => { Storage.addPreviousDay(state); render(); });
 
   const nextBtn = document.querySelector('[data-action="add-next-day"]');
   if (nextBtn) nextBtn.addEventListener("click", () => { Storage.addNextDay(state); render(); });
 
-  // أزرار تصدير واستيراد البيانات
   const exportBtn = document.querySelector('[data-action="export-data"]');
   if (exportBtn) exportBtn.addEventListener("click", handleExport);
 
@@ -248,7 +238,6 @@ function handleDeleteMeal(date, index) {
   render();
 }
 
-// تصدير البيانات (Export)
 function handleExport() {
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
   const dlAnchorElem = document.createElement("a");
@@ -257,7 +246,6 @@ function handleExport() {
   dlAnchorElem.click();
 }
 
-// استيراد البيانات (Import)
 function handleImport(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -281,7 +269,6 @@ function handleImport(e) {
   reader.readAsText(file);
 }
 
-// إعادة ضبط البيانات (Reset)
 function handleReset() {
   if (confirm("Are you sure you want to clear all data? This cannot be undone.")) {
     state = { days: [] };
