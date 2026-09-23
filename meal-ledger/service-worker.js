@@ -1,0 +1,42 @@
+// service-worker.js
+// Network-first: always tries to fetch the latest version first, and
+// only falls back to the cached copy when offline. This avoids the
+// "stuck on an old version" problem — no manual cache-clearing needed
+// after future updates.
+
+const CACHE_NAME = "meal-ledger-v1";
+const FILES_TO_CACHE = [
+  "./index.html",
+  "./style.css",
+  "./app.js",
+  "./storage.js",
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE)));
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+  );
+  self.clients.claim();
+});
+
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
+  );
+});

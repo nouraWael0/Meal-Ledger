@@ -1,0 +1,202 @@
+/* ---------------------------------------------------------------
+   Meal Ledger — same "ledger book" look as Calorie Ledger: light
+   paper, thin dividing lines, monospace numbers.
+   --------------------------------------------------------------- */
+
+:root {
+  --paper: #f5f1e8;
+  --paper-line: #d9d2c2;
+  --ink: #232620;
+  --ink-soft: #6f6a5b;
+  --neutral: #9a9484;
+  --red: #b7472a;
+  --green: #3f6b4f;
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  padding-bottom: 3rem;
+}
+
+.ledger {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1rem 1rem 4rem;
+}
+
+/* ---------- Day block ---------- */
+.day-block {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  padding: 0.5rem 0.1rem 0.75rem;
+  border-bottom: 1px dashed var(--paper-line);
+  margin-bottom: 0.25rem;
+}
+
+.icon-btn {
+  font-family: var(--mono);
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 4px;
+  width: 1.8rem;
+  height: 1.8rem;
+  line-height: 1;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.meal-actions .icon-btn {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px dashed var(--paper-line);
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.8rem;
+  margin-left: 0.3rem;
+}
+
+.meal-actions .icon-btn[data-action="delete-meal"]:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.empty-day {
+  padding: 0.75rem 0.1rem;
+  color: var(--neutral);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
+/* ---------- Meal rows ---------- */
+.meal-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.1rem;
+  border-bottom: 1px solid var(--paper-line);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+}
+
+.meal-name {
+  font-family: var(--serif);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.meal-calories {
+  text-align: right;
+}
+
+.meal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.total-row {
+  border-bottom: none;
+  border-top: 1px solid var(--ink);
+  margin-top: 0.3rem;
+  padding-top: 0.6rem;
+  font-weight: 600;
+}
+
+/* ---------- Add-meal form ---------- */
+.add-meal-form {
+  padding: 0.75rem 0.1rem;
+  border-bottom: 1px solid var(--paper-line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.meal-type-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.type-btn {
+  font-family: var(--serif);
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--paper-line);
+  border-radius: 20px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.type-btn.selected {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.text-input,
+.calories-input {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--paper-line);
+  background: #fff;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-row .calories-input {
+  flex: 1;
+}
+
+.save-meal-btn {
+  font-family: var(--serif);
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 420px) {
+  .meal-row {
+    font-size: 0.88rem;
+  }
+}
